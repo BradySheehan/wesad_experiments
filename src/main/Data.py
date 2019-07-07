@@ -11,7 +11,9 @@ import os
 
 class Data:
     # Path to the SD Card
-    PATH = '/media/learner/6663-3462/WESAD/'
+    # PATH = '/media/learner/6663-3462/WESAD/'
+    ROOT_PATH = r'C:\WESAD'
+    FILE_EXT = '.pkl'
     
     # Label values defined in the WESAD readme
     BASELINE = 1
@@ -22,11 +24,13 @@ class Data:
     stress_data = []
     
     # Keys for measurements collected by the RespiBAN on the chest
-    RAW_SENSOR_VALUES = ['ACC','ECG','EDA','EMG','Resp','Temp']
+    # minus the ones we don't want
+    # RAW_SENSOR_VALUES = ['ACC','ECG','EDA','EMG','Resp','Temp']
+    RAW_SENSOR_VALUES = ['ACC', 'EDA','Temp']
     
-    
-    def __init__(self, ignore_empatica=True):
-        # self.subject = subject
+    def __init__(self, ignore_empatica=True, ignore_additional_signals=True):
+        # denotes that we will be excluding the empatica data 
+        # after loading those measurements
         self.ignore_empatica = ignore_empatica
 
     def get_subject_path(self, subject):
@@ -40,8 +44,8 @@ class Data:
         """
         
         # subjects path looks like data_set + '<subject>/<subject>.pkl'
-        path = Data.PATH + 'S' + str(subject) + '/S' + str(subject) + '.pkl'
-        print('Loading from\nPath=' + path)
+        path = os.path.join(Data.ROOT_PATH, 'S'+ str(subject), 'S' + str(subject) + Data.FILE_EXT)
+        print('Loading data from S'+ str(subject) + '\nPath=' + path)
         if os.path.isfile(path):
             return path
         else:
@@ -74,10 +78,10 @@ class Data:
         data (dict): as loaded from the pickle file
         
         Returns: Baseline and stress data
-        dict: {{'ECG': [###, ..], ..}, 
-               {'ECG': [###, ..], ..} }
+        dict: {{'EDA': [###, ..], ..}, 
+               {'EDA': [###, ..], ..} }
         """
-        
+                
         if self.ignore_empatica:
             del data['signal']['wrist']
         
@@ -94,10 +98,3 @@ class Data:
         Data.stress_data.append(stress)
         
         return base, stress
-
-
-class Subject:
-    
-    def __init__(self, subject):
-        # self.subject = subject
-        self.subject = subject
