@@ -90,7 +90,7 @@ class Data:
         base = dict()
         stress = dict()
         
-        for value in Data.RAW_SENSOR_VALUES:
+        for value in Data.RAW_SENSOR_VALUES: 
             base[value] = data['signal']['chest'][value][baseline_indices]
             stress[value] = data['signal']['chest'][value][stress_indices]
         
