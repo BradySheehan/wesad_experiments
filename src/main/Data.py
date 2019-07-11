@@ -8,6 +8,9 @@ Created on Sun Jun 30 16:38:18 2019
 import pickle
 import numpy as np
 import os
+import statistics as stat
+import matplotlib.pyplot as plt
+import pandas as pd
 
 class Data:
     # Path to the SD Card
@@ -98,3 +101,66 @@ class Data:
         Data.stress_data.append(stress)
         
         return base, stress
+    
+    def get_stats(self, values, window_size, window_shift=175):
+        """ 
+        Calculates basic statistics including max, min, mean, and std
+        for the given data
+        
+        Parameters:
+        values (numpy.ndarray): list of numeric sensor values
+        
+        Returns: 
+        dict: 
+        """
+        max_tmp = []
+        min_tmp = []
+        mean_tmp = []
+        dynamic_range_tmp = []
+        std_tmp = []
+        for i in range(0, values.size - window_size,window_shift):
+            window = values[i:window_size + i]
+            max_tmp.append(np.amax(window))
+            min_tmp.append(np.amin(window))
+            mean_tmp.append(np.mean(window))
+            dynamic_range_tmp.append(max_tmp[-1] - min_tmp[-1])
+            std_tmp.append(np.std(window))
+        features = {}
+        features['max'] = max_tmp
+        features['min'] = min_tmp
+        features['mean'] = mean_tmp
+        features['range'] = dynamic_range_tmp
+        features['std'] = std_tmp
+        return features
+
+    def get_stats_for_acc(self, values, window_size, window_shift=175):
+        """ 
+        Calculates basic statistics including max, min, mean, and std
+        for the given data
+        
+        Parameters:
+        values (numpy.ndarray): list of numeric sensor values
+        
+        Returns: 
+        dict: 
+        """
+        window_size = 175
+        max_tmp = []
+        min_tmp = []
+        mean_tmp = []
+        dynamic_range_tmp = []
+        std_tmp = []
+        for i in range(0, values.size - window_size,window_shift):
+            window = values[i:window_size + i]
+            max_tmp.append(np.amax(window))
+            min_tmp.append(np.amin(window))
+            mean_tmp.append(np.mean(window))
+            dynamic_range_tmp.append(max_tmp[-1] - min_tmp[-1])
+            std_tmp.append(np.std(window))
+        features = {}
+        features['max'] = max_tmp
+        features['min'] = min_tmp
+        features['mean'] = mean_tmp
+        features['range'] = dynamic_range_tmp
+        features['std'] = std_tmp
+        return features
