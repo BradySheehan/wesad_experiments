@@ -118,7 +118,7 @@ class Data:
         mean_tmp = []
         dynamic_range_tmp = []
         std_tmp = []
-        for i in range(0, values.size - window_size,window_shift):
+        for i in range(0, values.size - window_size, window_shift):
             window = values[i:window_size + i]
             max_tmp.append(np.amax(window))
             min_tmp.append(np.amin(window))
@@ -133,34 +133,45 @@ class Data:
         features['std'] = std_tmp
         return features
 
-    def get_stats_for_acc(self, values, window_size, window_shift=175):
+    def get_features_for_acc(self, values, window_size, window_shift=175):
         """ 
-        Calculates basic statistics including max, min, mean, and std
-        for the given data
+        Calculates statistics including mean and std
+        for the given data and the peak frequency per axis and the
+        body acceleration component (RMS)
         
         Parameters:
-        values (numpy.ndarray): list of numeric sensor values
+        values (numpy.ndarray): list of numeric sensor values [x, y, z]
         
         Returns: 
         dict: 
         """
-        window_size = 175
-        max_tmp = []
-        min_tmp = []
-        mean_tmp = []
-        dynamic_range_tmp = []
-        std_tmp = []
-        for i in range(0, values.size - window_size,window_shift):
-            window = values[i:window_size + i]
-            max_tmp.append(np.amax(window))
-            min_tmp.append(np.amin(window))
-            mean_tmp.append(np.mean(window))
-            dynamic_range_tmp.append(max_tmp[-1] - min_tmp[-1])
-            std_tmp.append(np.std(window))
+        meanx_tmp, meany_tmp, meanz_tmp, maxx_tmp, maxy_tmp, maxz_tmp, \
+            stdx_tmp, stdy_tmp, stdz_tmp, mean_tmp, std_tmp = ([], ) * 11
+        print(len(mean_tmp))
+        for i in range(0, len(values[:,1]) - window_size, window_shift):
+            window = values[i:window_size + i, :]
+            meanx_tmp.append(np.mean(window[:, 0]))
+            meany_tmp.append(np.mean(window[:, 1]))
+            meanz_tmp.append(np.mean(window[:, 2]))
+            mean_tmp.append( (meanx_tmp[-1] + meany_tmp[-1] + meanz_tmp[-1]) )
+
+            stdx_tmp.append(np.std(window[:, 0]))
+            stdy_tmp.append(np.std(window[:, 1]))
+            stdz_tmp.append(np.std(window[:, 2]))
+            std_tmp.append(stdx_tmp[-1] + stdy_tmp[-1] + stdz_tmp[-1])
+
+            maxx_tmp.append(np.amax(window[:, 0]))
+            maxy_tmp.append(np.amax(window[:, 1]))
+            maxz_tmp.append(np.amax(window[:, 2]))
+
+
         features = {}
-        features['max'] = max_tmp
-        features['min'] = min_tmp
         features['mean'] = mean_tmp
-        features['range'] = dynamic_range_tmp
-        features['std'] = std_tmp
+        print(len(features['mean']))
+        features['std'] =  std_tmp
+
+        features['maxx'] = maxx_tmp
+        features['maxy'] = maxy_tmp
+        features['maxz'] = maxz_tmp
+        
         return features
