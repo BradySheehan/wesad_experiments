@@ -113,12 +113,16 @@ class Data:
         Returns: 
         dict: 
         """
+        print("There are ", values.size, " samples being considered.")
+        num_features = values.size - window_size
+        print("Computing ", num_features, " feature values" )
+        print("with window size of ", window_size, "." )
         max_tmp = []
         min_tmp = []
         mean_tmp = []
         dynamic_range_tmp = []
         std_tmp = []
-        for i in range(0, values.size - window_size, window_shift):
+        for i in range(0, num_features, window_shift):
             window = values[i:window_size + i]
             max_tmp.append(np.amax(window))
             min_tmp.append(np.amin(window))
@@ -145,33 +149,46 @@ class Data:
         Returns: 
         dict: 
         """
-        meanx_tmp, meany_tmp, meanz_tmp, maxx_tmp, maxy_tmp, maxz_tmp, \
-            stdx_tmp, stdy_tmp, stdz_tmp, mean_tmp, std_tmp = ([], ) * 11
-        print(len(mean_tmp))
-        for i in range(0, len(values[:,1]) - window_size, window_shift):
-            window = values[i:window_size + i, :]
-            meanx_tmp.append(np.mean(window[:, 0]))
-            meany_tmp.append(np.mean(window[:, 1]))
-            meanz_tmp.append(np.mean(window[:, 2]))
-            mean_tmp.append( (meanx_tmp[-1] + meany_tmp[-1] + meanz_tmp[-1]) )
+        print("There are ", len(values[:,1]), " samples being considered.")
+        num_features = len(values[:,1]) - window_size
+        print("Computing ", num_features , " feature values" )
+        print("with window size of ", window_size, "." )
+        maxx_tmp = []
+        maxy_tmp = []
+        maxz_tmp = []
+        mean_tmp = []
+        std_tmp = []        
+        for i in range(0, num_features, window_shift):
+            windowx = values[i:window_size + i, 0]
+            windowy = values[i:window_size + i, 1]
+            windowz = values[i:window_size + i, 2]
+                        
+            meanx = np.mean(windowx)
+            meany = np.mean(windowy)
+            meanz = np.mean(windowz)
+            mean_tmp.append( (meanx + meany + meanz) )
 
-            stdx_tmp.append(np.std(window[:, 0]))
-            stdy_tmp.append(np.std(window[:, 1]))
-            stdz_tmp.append(np.std(window[:, 2]))
-            std_tmp.append(stdx_tmp[-1] + stdy_tmp[-1] + stdz_tmp[-1])
-
-            maxx_tmp.append(np.amax(window[:, 0]))
-            maxy_tmp.append(np.amax(window[:, 1]))
-            maxz_tmp.append(np.amax(window[:, 2]))
-
+            stdx = np.std(windowx)
+            stdy = np.std(windowy)
+            stdz = np.std(windowz)
+            std_tmp.append( (stdx + stdy + stdz) )
+            
+            maxx_tmp.append(np.amax(windowx))
+            maxy_tmp.append(np.amax(windowy))
+            maxz_tmp.append(np.amax(windowz))
 
         features = {}
         features['mean'] = mean_tmp
-        print(len(features['mean']))
         features['std'] =  std_tmp
-
         features['maxx'] = maxx_tmp
         features['maxy'] = maxy_tmp
         features['maxz'] = maxz_tmp
         
         return features
+
+
+
+
+#            meanx_tmp.append(np.mean(window[:, 0]))
+#            meany_tmp.append(np.mean(window[:, 1]))
+#            meanz_tmp.append(np.mean(window[:, 2]))
