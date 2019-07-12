@@ -25,17 +25,24 @@ class DataManager:
     BASELINE = 1
     STRESS = 2
     
-    # Dictionaries to store the two sets of data
-    BASELINE_DATA = []
-    STRESS_DATA = []
-    
-    BASELINE_FEATURES = []
-    STRESS_FEATURES = []
-    
+    FEATURE_KEYS =     ['max',  'min', 'mean', 'range', 'std']
+    FEATURE_ACC_KEYS = ['maxx', 'maxy', 'maxz', 'mean', 'std']
+
     # Keys for measurements collected by the RespiBAN on the chest
     # minus the ones we don't want
     # RAW_SENSOR_VALUES = ['ACC','ECG','EDA','EMG','Resp','Temp']
     RAW_SENSOR_VALUES = ['ACC', 'EDA','Temp']
+    
+    FEATURES = {'a_mean': [], 'a_std': [], 'a_maxx': [], 'a_maxy': [], 'a_maxz': [],\
+                'e_max': [],  'e_min': [], 'e_mean': [], 'e_range': [], 'e_std': [], \
+                't_max': [],  't_min': [], 't_mean': [], 't_range': [], 't_std': [] }
+    STRESS_FEATURES = {'a_mean': [], 'a_std': [], 'a_maxx': [], 'a_maxy': [], 'a_maxz': [],\
+                'e_max': [],  'e_min': [], 'e_mean': [], 'e_range': [], 'e_std': [], \
+                't_max': [],  't_min': [], 't_mean': [], 't_range': [], 't_std': [] }
+    
+    # Dictionaries to store the two sets of data
+    BASELINE_DATA = []
+    STRESS_DATA = []
     
     def __init__(self, ignore_empatica=True, ignore_additional_signals=True):
         # denotes that we will be excluding the empatica data 
@@ -54,7 +61,7 @@ class DataManager:
         
         # subjects path looks like data_set + '<subject>/<subject>.pkl'
         path = os.path.join(DataManager.ROOT_PATH, 'S'+ str(subject), 'S' + str(subject) + DataManager.FILE_EXT)
-        print('Loading data from S'+ str(subject) + '\nPath=' + path)
+        print('Loading data from S'+ str(subject) + '\n\tPath=' + path)
         if os.path.isfile(path):
             return path
         else:
@@ -124,10 +131,10 @@ class DataManager:
         Returns: 
         dict: 
         """
-        print("There are ",  values.size, " samples being considered.")
+#        print("There are ",  values.size, " samples being considered.")
         num_features = values.size - window_size
-        print("Computing ", num_features , " feature values with window size" \
-              "of ", str(window_size) + "." )        
+#        print("Computing ", num_features , " feature values with window size" \
+#              "of ", str(window_size) + "." )        
         max_tmp = []
         min_tmp = []
         mean_tmp = []
@@ -140,6 +147,7 @@ class DataManager:
             mean_tmp.append(np.mean(window))
             dynamic_range_tmp.append(max_tmp[-1] - min_tmp[-1])
             std_tmp.append(np.std(window))
+
         features = {}
         features['max'] = max_tmp
         features['min'] = min_tmp
@@ -160,10 +168,10 @@ class DataManager:
         Returns: 
         dict: 
         """
-        print("There are ", len(values[:,1]), " samples being considered.")
+#        print("There are ", len(values[:,1]), " samples being considered.")
         num_features = len(values[:,1]) - window_size
-        print("Computing ", num_features , " feature values with window size" \
-              "of ", str(window_size) + "." )
+#        print("Computing ", num_features , " feature values with window size" \
+#              "of ", str(window_size) + "." )
         maxx_tmp = []
         maxy_tmp = []
         maxz_tmp = []
@@ -197,45 +205,59 @@ class DataManager:
         
         return features
     
-    def compute_features(self, subject, base_data=BASELINE_DATA, stress_data=STRESS_DATA, \
-                         window_size=42000, window_shift=175):
-        """
-        returns:
-        list: [base, stress], base = {'temp, 'ACC', 'EDA'}, stress = {'temp, 'ACC', 'EDA'}
-        """
-        
-        #We are computing features for subjects 2 - 11, but indexing from 0
-        index = subject - 2
-        
-        temp = base_data[index]['Temp']
-        acc = base_data[index]['ACC']
-        eda = base_data[index]['EDA']
-        temp_stress = stress_data[index]['Temp']
-        acc_stress = stress_data[index]['ACC']
-        eda_stress = stress_data[index]['EDA']
-
-        acc_features_base = self.get_features_for_acc(acc, window_size, window_shift)
-        acc_features_stress = self.get_features_for_acc(acc_stress, window_size, window_shift)
-        
-        eda_features_stress = self.get_stats(eda, window_size, window_shift)
-        eda_features_base = self.get_stats(eda_stress, window_size, window_shift)
-        
-        temp_features_base = self.get_stats(temp, window_size, window_shift)
-        temp_features_stress = self.get_stats(temp_stress, window_size, window_shift)
-        
-        temp_base = [acc_features_base, eda_features_base, temp_features_base]
-        temp_stress = [acc_features_stress, eda_features_stress, temp_features_stress]
-        
-        DataManager.BASELINE_FEATURES.append(temp_base)
-        DataManager.STRESS_FEATURES.append(temp_stress)
-        
-        return [temp_base, temp_stress]
-    
-    def compute_all_features(self, subjects=SUBJECTS):
+    def compute_features(self, subjects=SUBJECTS, data=BASELINE_DATA, window_size=42000, window_shift=175):
+        keys = list(DataManager.FEATURES.keys())
+        print('conputing features..')
         for subject in subjects:
-            print('Computing features for subject:', subject)
-            self.compute_features(subject)
+            print("Considering subject ", subject)
+            index = subject - 2
+            key_index = 0
             
+            acc = self.get_features_for_acc(data[index]['ACC'], window_size, window_shift)
+            for feature in DataManager.FEATURE_ACC_KEYS:
+#                print('computed ', len(acc[feature]), 'windows for acc ', feature)
+                DataManager.FEATURES[keys[key_index]].extend(acc[feature])
+                key_index = key_index + 1
+            
+            eda = self.get_stats(data[index]['EDA'], window_size, window_shift)
+            for feature in DataManager.FEATURE_KEYS:
+#                print('computed ', len(eda[feature]), 'windows for eda ', feature)
+                DataManager.FEATURES[keys[key_index]].extend(eda[feature])
+                key_index = key_index + 1
+
+            temp = self.get_stats(data[index]['Temp'], window_size, window_shift)
+            for feature in DataManager.FEATURE_KEYS:
+#                print('computed ', len(temp[feature]), 'windows for temp ', feature)
+                DataManager.FEATURES[keys[key_index]].extend(temp[feature])
+                key_index = key_index + 1
+        return DataManager.FEATURES
+
+    def compute_features_stress(self, subjects=SUBJECTS, data=STRESS_DATA, window_size=42000, window_shift=175):
+        keys = list(DataManager.STRESS_FEATURES.keys())
+        print('conputing features..')    
+        for subject in subjects:
+            print("Considering subject ", subject)
+            index = subject - 2
+            key_index = 0
+            
+            acc = self.get_features_for_acc(data[index]['ACC'], window_size, window_shift)
+            for feature in DataManager.FEATURE_ACC_KEYS:
+#                print('computed ', len(acc[feature]), 'windows for acc ', feature)
+                DataManager.STRESS_FEATURES[keys[key_index]].extend(acc[feature])
+                key_index = key_index + 1
+            
+            eda = self.get_stats(data[index]['EDA'], window_size, window_shift)
+            for feature in DataManager.FEATURE_KEYS:
+#                print('computed ', len(eda[feature]), 'windows for eda ', feature)
+                DataManager.STRESS_FEATURES[keys[key_index]].extend(eda[feature])
+                key_index = key_index + 1
+
+            temp = self.get_stats(data[index]['Temp'], window_size, window_shift)
+            for feature in DataManager.FEATURE_KEYS:
+#                print('computed ', len(temp[feature]), 'windows for temp ', feature)
+                DataManager.STRESS_FEATURES[keys[key_index]].extend(temp[feature])
+                key_index = key_index + 1
+        return DataManager.STRESS_FEATURES
 # TODO: Write a function that does 
 # checks for if the data is not specified in the function being called
 # then it throws an exception with a nice message.
