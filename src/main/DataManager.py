@@ -14,8 +14,8 @@ import os
 
 class DataManager:
     # Path to the SD Card
-    # PATH = '/media/learner/6663-3462/WESAD/'
-    ROOT_PATH = r'C:\WESAD'
+    ROOT_PATH = '/media/learner/6663-3462/WESAD/'
+    # ROOT_PATH = r'C:\WESAD'
     FILE_EXT = '.pkl'
     
     # IDs of the subjects
@@ -230,6 +230,7 @@ class DataManager:
 #                print('computed ', len(temp[feature]), 'windows for temp ', feature)
                 DataManager.FEATURES[keys[key_index]].extend(temp[feature])
                 key_index = key_index + 1
+            
         return DataManager.FEATURES
 
     def compute_features_stress(self, subjects=SUBJECTS, data=STRESS_DATA, window_size=42000, window_shift=175):
@@ -258,6 +259,7 @@ class DataManager:
                 DataManager.STRESS_FEATURES[keys[key_index]].extend(temp[feature])
                 key_index = key_index + 1
         return DataManager.STRESS_FEATURES
+
 # TODO: Write a function that does 
 # checks for if the data is not specified in the function being called
 # then it throws an exception with a nice message.
