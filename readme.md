@@ -80,7 +80,7 @@ written for Python3 and is using
 
 ### File Structure
 /
-- demo.sh - driver setups, builds, trains, and tests model
+- demo.sh - driver that sets up, builds, trains, and tests model
 - readme.md
 - references/ - WESAD dataset and paper information
 - src/
@@ -92,9 +92,8 @@ written for Python3 and is using
         - feature-exploration.ipynb
         - feature-exploration-continued.ipynb
         - model-training.ipynb
+        - demo
     - src/models - Directory for Keras model data files
-        - model-5-epochs.json
-        - model-5-epochs.h5
     
 ### Development Process
 
@@ -122,7 +121,9 @@ results for both accuracy and F1 using less modalities and less features.
 Nvidia jetson TX2:
 batch_size = 32, 4, 2
 .. performance seems pretty slow.., even when attempting to use Jetson TX2 Cuda 
-stuff. The acc is less, I'm not sure why yet.
+stuff. The acc is less, not sure why yet. With a batch size of 4, and one epoch,
+we get results of approximately 82% validation accuracy. Still not as good as 
+on windows.
 
 ## Future Work
 
