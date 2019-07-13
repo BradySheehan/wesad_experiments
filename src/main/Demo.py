@@ -24,7 +24,7 @@ class Demo:
     print("Considering stress experiment data:")
     manager.compute_features_stress()
     
-    batch_size = 2
+    batch_size = 32
     epochs = 1
     print("===============================================================")
     
