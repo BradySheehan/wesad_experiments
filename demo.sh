@@ -6,4 +6,4 @@ BASEDIR=$(dirname $0)
 
 /bin/echo -e "Starting Demo!\nby Brady Sheehan"
 
-python ${BASEDIR}/src/main/Demo.py
+python3 ${BASEDIR}/src/main/Demo.py
