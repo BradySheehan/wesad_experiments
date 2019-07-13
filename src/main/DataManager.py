@@ -351,13 +351,15 @@ class DataManager:
         return model
 
     def configure_learning(self, model):
+        windows=0.05
+        linux=0.1
         opt = SGD(lr=0.05)
         model.compile(loss='binary_crossentropy', optimizer=opt,\
                       metrics=['accuracy'])
         return model
 
     def train_model(self, model, X_train, X_test, y_train, y_test,\
-                    batch_size=2, epochs=5):
+                    batch_size=32, epochs=5):
         print('Training network...')
         model.fit(X_train, y_train,
                   batch_size=batch_size,
@@ -388,7 +390,7 @@ class DataManager:
               DataManager.last_saved)
         
     def get_model_results(self, model, X_train, X_test, y_train, y_test,\
-                          batch_size=2):
+                          batch_size=32):
         print('batch_size = ', batch_size)
         print('Model results from model.evaluate() test data')
         score, acc = model.evaluate(X_test , y_test, batch_size=batch_size)
@@ -405,7 +407,7 @@ class DataManager:
         print(confusion_matrix(y_test, y_pred))
         print("_________________________________________________________________")
 
-    def create_network(self, epochs=5, batch_size=2):
+    def create_network(self, epochs=5, batch_size=32):
         (X_train, X_test, y_train, y_test) = self.get_train_and_test_data()
         (X_train, X_test, y_train, y_test) = \
             self.scale_data(X_train, X_test, y_train, y_test)
