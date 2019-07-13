@@ -8,14 +8,25 @@ Created on Sun Jun 30 16:38:18 2019
 import pickle
 import numpy as np
 import os
-#import statistics as stat
-#import matplotlib.pyplot as plt
-#import pandas as pd
+import tensorflow as tf
+
+import sklearn
+from  sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
+
+import keras
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.optimizers import SGD
+from keras.models import model_from_json
 
 class DataManager:
     # Path to the SD Card
-    ROOT_PATH = '/media/learner/6663-3462/WESAD/'
-    # ROOT_PATH = r'C:\WESAD'
+    #ROOT_PATH = '/media/learner/6663-3462/WESAD/'
+    ROOT_PATH = r'C:\WESAD'
     FILE_EXT = '.pkl'
     
     # IDs of the subjects
@@ -168,10 +179,10 @@ class DataManager:
         Returns: 
         dict: 
         """
-#        print("There are ", len(values[:,1]), " samples being considered.")
+        #print("There are ", len(values[:,1]), " samples being considered.")
         num_features = len(values[:,1]) - window_size
-#        print("Computing ", num_features , " feature values with window size" \
-#              "of ", str(window_size) + "." )
+        #print("Computing ", num_features , " feature values with window size" \
+        #              "of ", str(window_size) + "." )
         maxx_tmp = []
         maxy_tmp = []
         maxz_tmp = []
@@ -215,19 +226,19 @@ class DataManager:
             
             acc = self.get_features_for_acc(data[index]['ACC'], window_size, window_shift)
             for feature in DataManager.FEATURE_ACC_KEYS:
-#                print('computed ', len(acc[feature]), 'windows for acc ', feature)
+                #print('computed ', len(acc[feature]), 'windows for acc ', feature)
                 DataManager.FEATURES[keys[key_index]].extend(acc[feature])
                 key_index = key_index + 1
             
             eda = self.get_stats(data[index]['EDA'], window_size, window_shift)
             for feature in DataManager.FEATURE_KEYS:
-#                print('computed ', len(eda[feature]), 'windows for eda ', feature)
+                #print('computed ', len(eda[feature]), 'windows for eda ', feature)
                 DataManager.FEATURES[keys[key_index]].extend(eda[feature])
                 key_index = key_index + 1
 
             temp = self.get_stats(data[index]['Temp'], window_size, window_shift)
             for feature in DataManager.FEATURE_KEYS:
-#                print('computed ', len(temp[feature]), 'windows for temp ', feature)
+                #print('computed ', len(temp[feature]), 'windows for temp ', feature)
                 DataManager.FEATURES[keys[key_index]].extend(temp[feature])
                 key_index = key_index + 1
             
@@ -243,22 +254,155 @@ class DataManager:
             
             acc = self.get_features_for_acc(data[index]['ACC'], window_size, window_shift)
             for feature in DataManager.FEATURE_ACC_KEYS:
-#                print('computed ', len(acc[feature]), 'windows for acc ', feature)
+                #print('computed ', len(acc[feature]), 'windows for acc ', feature)
                 DataManager.STRESS_FEATURES[keys[key_index]].extend(acc[feature])
                 key_index = key_index + 1
             
             eda = self.get_stats(data[index]['EDA'], window_size, window_shift)
             for feature in DataManager.FEATURE_KEYS:
-#                print('computed ', len(eda[feature]), 'windows for eda ', feature)
+                #print('computed ', len(eda[feature]), 'windows for eda ', feature)
                 DataManager.STRESS_FEATURES[keys[key_index]].extend(eda[feature])
                 key_index = key_index + 1
 
             temp = self.get_stats(data[index]['Temp'], window_size, window_shift)
             for feature in DataManager.FEATURE_KEYS:
-#                print('computed ', len(temp[feature]), 'windows for temp ', feature)
+                #print('computed ', len(temp[feature]), 'windows for temp ', feature)
                 DataManager.STRESS_FEATURES[keys[key_index]].extend(temp[feature])
                 key_index = key_index + 1
         return DataManager.STRESS_FEATURES
+
+    def get_train_and_test_data(self):
+        X1 = []
+        X2 = []
+        for i in range(0, len(DataManager.FEATURES['a_mean'])):
+            X1.append([DataManager.FEATURES['a_mean'][i], DataManager.FEATURES['a_std'][i],\
+                       DataManager.FEATURES['a_maxx'][i], DataManager.FEATURES['a_maxy'][i],\
+                       DataManager.FEATURES['a_maxz'][i], DataManager.FEATURES['e_max'][i],\
+                       DataManager.FEATURES['e_min'][i],  DataManager.FEATURES['e_mean'][i],\
+                       DataManager.FEATURES['e_range'][i],DataManager.FEATURES['e_std'][i],\
+                       DataManager.FEATURES['t_max'][i],  DataManager.FEATURES['t_min'][i],\
+                       DataManager.FEATURES['t_mean'][i], DataManager.FEATURES['t_range'][i],\
+                       DataManager.FEATURES['t_std'][i]])
+        #print(np.shape(X1))
+        
+        for i in range(0,  len(DataManager.STRESS_FEATURES['a_mean'])):
+            X2.append([DataManager.STRESS_FEATURES['a_mean'][i], DataManager.STRESS_FEATURES['a_std'][i],\
+                       DataManager.STRESS_FEATURES['a_maxx'][i], DataManager.STRESS_FEATURES['a_maxy'][i],\
+                       DataManager.STRESS_FEATURES['a_maxz'][i], DataManager.STRESS_FEATURES['e_max'][i],\
+                       DataManager.STRESS_FEATURES['e_min'][i], DataManager.STRESS_FEATURES['e_mean'][i],\
+                       DataManager.STRESS_FEATURES['e_range'][i], DataManager.STRESS_FEATURES['e_std'][i],\
+                       DataManager.STRESS_FEATURES['t_max'][i], DataManager.STRESS_FEATURES['t_min'][i],\
+                       DataManager.STRESS_FEATURES['t_mean'][i], DataManager.STRESS_FEATURES['t_range'][i],\
+                       DataManager.STRESS_FEATURES['t_std'][i]])                
+        #print(np.shape(X2))
+        
+        # initialize zero for base and 1 for stress
+        y1 = [0] * len(X1)
+        y2 = [1] * len(X2)
+        # Now we need to concat the data between baseline and stress so that 
+        # we can split it into training and test sets    
+        X = np.concatenate((X1, X2), axis=0)
+        #print(np.shape(X))
+        
+        y = np.concatenate((y1,y2), axis=0)
+        #print(np.shape(y))
+        X_train, X_test, y_train, y_test = \
+            train_test_split(X, y, test_size=0.25, random_state=42)
+        return (X_train, X_test, y_train, y_test)
+
+    def normalize(self, data):
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        return scaler.fit_transform(data)
+
+    def scale_data(self, X_train, X_test, y_train, y_test):
+        print("Scaling the data...")
+        (X_train, X_test, y_train, y_test) = self.get_train_and_test_data()
+        X_train = self.normalize(X_train)
+        X_test = self.normalize(X_test)
+        X_train = np.reshape(X_train, (X_train.shape[0], 1, X_train.shape[1]))
+        X_test = np.reshape(X_test, (X_test.shape[0], 1, X_test.shape[1]))
+        return (X_train, X_test, y_train, y_test)
+
+    def build_model(self):
+        num_neurons = 15
+        num_features = 15
+        
+        print('Building the LSTM NN...')
+
+        model = Sequential()
+        model.add(LSTM(num_neurons, input_shape=(1, num_features), return_sequences=True))
+        model.add(LSTM(num_neurons, input_shape=(1, num_features), return_sequences=False))
+        model.add(Dense(1, activation='sigmoid'))
+        
+        model = self.configure_learning(model)
+        print(model.summary())
+        return model
+
+    def configure_learning(self, model):
+        opt = SGD(lr=0.05)
+        model.compile(loss='binary_crossentropy', optimizer=opt,\
+                      metrics=['accuracy'])
+        return model
+
+    def train_model(self, model, X_train, X_test, y_train, y_test,\
+                    batch_size=2, epochs=5):
+        print('Training network...')
+        model.fit(X_train, y_train,
+                  batch_size=batch_size,
+                  epochs=epochs,
+                  validation_data=(X_test, y_test))
+        #print("inputs: " , model.input_shape)
+        #print("outputs: ", model.output_shape)
+        #print("actual inputs: ", np.shape(X_train))
+        #print("actual outputs: ", np.shape(y_train))
+        score, acc = model.evaluate(X_test, y_test, batch_size=batch_size)
+        return (model, score, acc)
+
+    def load_model(self, json_file_name='model.json',\
+                   weights_file_name='model.h5'):
+        # Load the model of interest
+        json_file = open(json_file_name, 'r')
+        json = json_file.read()
+        json_file.close()
+        model_from_disc = model_from_json(json)
+        model_from_disc.load_weights(weights_file_name)
+        model = self.configure_learning(model_from_disc)
+        return model
+
+    def save_model(self, model):
+        json = model.to_json()
+        with open("model.json", "w") as file:
+            file.write(json)
+        model.save_weights("model.h5")
+        print("Saved model to disc")
+        
+    def get_model_results(self, model, X_train, X_test, y_train, y_test,\
+                          batch_size=2):
+
+        print('batch_size = ', batch_size)
+        print('Model results from model.evaluate() test data')
+        score, acc = model.evaluate(X_test , y_test, batch_size=batch_size)
+        print('score:', score, 'accuracy:', acc)
+        y_pred = model.predict(X_test, batch_size=batch_size, verbose=1)
+        y_pred[y_pred>0.5] = 1 
+        y_pred[y_pred<=0.5] = 0 
+        print('Classification report from model.predict with test data')
+        print(classification_report(y_test, y_pred))
+        
+        print('Confusion matrix from model.predict with test data')
+        print(confusion_matrix(y_test, y_pred))
+
+    def create_network(self, epochs=5, batch_size=2):
+        (X_train, X_test, y_train, y_test) = self.get_train_and_test_data()
+        X_train, X_test, y_train, y_test = \
+            self.scale_data(X_train, X_test, y_train, y_test)
+        model = self.build_model()
+        model = self.train_model(model, X_train, X_test, y_train, y_test,\
+                                 batch_size, epochs)
+        self.save_model(model)
+        
+        self.get_model_results(model, X_train, X_test, y_train, y_test)
+        return (model, X_train, X_test, y_train, y_test)
 
 # TODO: Write a function that does 
 # checks for if the data is not specified in the function being called
