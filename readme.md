@@ -45,6 +45,27 @@ The features of interest for the EDA data are:
 
 ## Project Structure and Development Process
 
+### Environment
+
+There are two assumed paths to run the notebooks and the python module:
+- a path to the git project
+- a path to the WESAD dataset
+Be sure that these are assigned appropriately for yoru environment
+
+### Dependencies
+
+The project depends on multiple python libraries and packages. All of the code is 
+written for Python3 and is using
+- pandas
+- matplotlib
+- numpy
+- keras
+- tensorflow
+- sklearn
+- 
+
+
+
 ### File Structure
 /
 - demo.sh - driver setups, builds, trains, and tests model
@@ -54,12 +75,14 @@ The features of interest for the EDA data are:
     - src/main - Python3 modules
         - DataManager.py
         - Demo.py
-    - src/main/notebooks - jupyter ipython notebooks
+    - src/notebooks - jupyter ipython notebooks
         - exploring-the-dataset.ipynb
         - feature-exploration.ipynb
         - feature-exploration-continued.ipynb
         - model-training.ipynb
-
+    - src/models - Directory for Keras model data files
+        - model-5-epochs.json
+        - model-5-epochs.h4
 ### Development Process
 
 During the development process, trail and error experiments were performed

@@ -11,39 +11,23 @@ import sys
 module = os.path.abspath("C:/Users\\18145\\development\\wesad_experiments\\src\\main")
 if module not in sys.path:
     sys.path.append(module)
-import pip
 
-import keras
-import h5py
-import ibmiotf
-import tensorflow
-
-import numpy as np
-from numpy import concatenate
-from matplotlib import pyplot
-from pandas import read_csv
-from pandas import DataFrame
-from pandas import concat
-
-import sklearn
-from  sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import mean_squared_error
-
-from keras.models import Sequential
-from keras.layers import Dense, Embedding
-from keras.layers import LSTM
 from DataManager import DataManager
 
 manager = DataManager()
 
 manager.load_all()
-
 manager.compute_features()
+manager.compute_features_stress()
 
-manager.compute_features_stress0()
+batch_size = 2
+epochs = 1
 
-manager.train_model()
+# compute for one epoch
+(model, X_train, X_test, y_train, y_test) = \
+    manager.create_network(epochs, batch_size)
 
-manager.test_model()
+# then load a previously computed 5 epoch model and display the results
+model_5_epochs = manager.load_model()
+manager.get_model_results(model_5_epochs, X_train, X_test, y_train, y_test )
+
