@@ -16,7 +16,7 @@ from DataManager import DataManager
 class Demo:
     
     manager = DataManager()
-    
+        
     print("Preparing data for model creation..")
     manager.load_all()
     print("Considering baseline experiment data:")
@@ -24,7 +24,7 @@ class Demo:
     print("Considering stress experiment data:")
     manager.compute_features_stress()
     
-    batch_size = 32
+    batch_size = 4
     epochs = 1
     print("===============================================================")
     
@@ -36,7 +36,7 @@ class Demo:
     print("===============================================================")
     
     print("Evaluating LSTM network with", epochs, "epochs.")
-    manager.get_model_results(model, X_train, X_test, y_train, y_test )
+    manager.get_model_results(model, X_train, X_test, y_train, y_test, batch_size)
     
     
     print("===============================================================")

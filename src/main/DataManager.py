@@ -34,7 +34,7 @@ class DataManager:
     FILE_EXT = '.pkl'
 
     # Directory in project structure where model files are stored
-    MODELS_DIR = os.path.join(Path().absolute().parent, 'models')
+    MODELS_DIR = os.path.join(Path().absolute(), 'src', 'models')
 
     # IDs of the subjects
     SUBJECTS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
