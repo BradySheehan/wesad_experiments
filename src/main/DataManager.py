@@ -8,7 +8,9 @@ Created on Sun Jun 30 16:38:18 2019
 import pickle
 import numpy as np
 import os
+import datetime
 import tensorflow as tf
+from pathlib import Path
 
 import sklearn
 from  sklearn.preprocessing import MinMaxScaler
@@ -21,14 +23,19 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.optimizers import SGD
-from keras.models import model_from_json
+from keras.models import load_model
 
 class DataManager:
-    # Path to the SD Card
+    # Path to the WESAD dataset
     #ROOT_PATH = '/media/learner/6663-3462/WESAD/'
     ROOT_PATH = r'C:\WESAD'
-    FILE_EXT = '.pkl'
     
+    # pickle file extension for importing
+    FILE_EXT = '.pkl'
+
+    # Directory in project structure where model files are stored
+    MODELS_DIR = os.path.join(Path().absolute().parent, 'models')
+
     # IDs of the subjects
     SUBJECTS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     
@@ -55,6 +62,9 @@ class DataManager:
     BASELINE_DATA = []
     STRESS_DATA = []
     
+    # the file name for the last created model
+    last_saved=''
+    
     def __init__(self, ignore_empatica=True, ignore_additional_signals=True):
         # denotes that we will be excluding the empatica data 
         # after loading those measurements
@@ -72,7 +82,8 @@ class DataManager:
         
         # subjects path looks like data_set + '<subject>/<subject>.pkl'
         path = os.path.join(DataManager.ROOT_PATH, 'S'+ str(subject), 'S' + str(subject) + DataManager.FILE_EXT)
-        print('Loading data from S'+ str(subject) + '\n\tPath=' + path)
+        print('Loading data for S'+ str(subject))
+        #print('Path=' + path)
         if os.path.isfile(path):
             return path
         else:
@@ -218,9 +229,9 @@ class DataManager:
     
     def compute_features(self, subjects=SUBJECTS, data=BASELINE_DATA, window_size=42000, window_shift=175):
         keys = list(DataManager.FEATURES.keys())
-        print('conputing features..')
+        print('Computing features..')
         for subject in subjects:
-            print("Considering subject ", subject)
+            print("\tsubject:", subject)
             index = subject - 2
             key_index = 0
             
@@ -248,7 +259,7 @@ class DataManager:
         keys = list(DataManager.STRESS_FEATURES.keys())
         print('conputing features..')    
         for subject in subjects:
-            print("Considering subject ", subject)
+            print("\tsubject:", subject)
             index = subject - 2
             key_index = 0
             
@@ -358,50 +369,51 @@ class DataManager:
         score, acc = model.evaluate(X_test, y_test, batch_size=batch_size)
         return (model, score, acc)
 
-    def load_model(self, json_file_name='model.json',\
-                   weights_file_name='model.h5'):
+    def load_model(self, file_name=last_saved):
         # Load the model of interest
-        json_file = open(json_file_name, 'r')
-        json = json_file.read()
-        json_file.close()
-        model_from_disc = model_from_json(json)
-        model_from_disc.load_weights(weights_file_name)
-        model = self.configure_learning(model_from_disc)
-        return model
+        print("Loading model:", file_name)
+        file = (os.path.join(DataManager.MODELS_DIR, file_name))
+        model_from_disc = load_model(file)
+        return model_from_disc
 
     def save_model(self, model):
-        json = model.to_json()
-        with open("model.json", "w") as file:
-            file.write(json)
-        model.save_weights("model.h5")
-        print("Saved model to disc")
+        now = datetime.datetime.now()
+        # Make sure the datetime str has no special characters and no spaces
+        DataManager.last_saved = str("model-" + \
+                                     str(now.replace(microsecond=0)) +\
+                                     ".h5").replace(" ", "").replace(":", "_")
+        model.save(os.path.join(DataManager.MODELS_DIR, DataManager.last_saved))
+        print("Saved model to disc:",\
+              DataManager.last_saved)
         
     def get_model_results(self, model, X_train, X_test, y_train, y_test,\
                           batch_size=2):
-
         print('batch_size = ', batch_size)
         print('Model results from model.evaluate() test data')
         score, acc = model.evaluate(X_test , y_test, batch_size=batch_size)
         print('score:', score, 'accuracy:', acc)
+        
         y_pred = model.predict(X_test, batch_size=batch_size, verbose=1)
         y_pred[y_pred>0.5] = 1 
         y_pred[y_pred<=0.5] = 0 
-        print('Classification report from model.predict with test data')
+        print("_________________________________________________________________")
+        print('\nClassification report from model.predict with test data')
         print(classification_report(y_test, y_pred))
-        
-        print('Confusion matrix from model.predict with test data')
+        print("_________________________________________________________________")
+        print('\nConfusion matrix from model.predict with test data')
         print(confusion_matrix(y_test, y_pred))
+        print("_________________________________________________________________")
 
     def create_network(self, epochs=5, batch_size=2):
         (X_train, X_test, y_train, y_test) = self.get_train_and_test_data()
-        X_train, X_test, y_train, y_test = \
+        (X_train, X_test, y_train, y_test) = \
             self.scale_data(X_train, X_test, y_train, y_test)
         model = self.build_model()
-        model = self.train_model(model, X_train, X_test, y_train, y_test,\
+        (model, score, acc) = self.train_model(model, X_train, X_test, y_train, y_test,\
                                  batch_size, epochs)
         self.save_model(model)
         
-        self.get_model_results(model, X_train, X_test, y_train, y_test)
+        #self.get_model_results(model, X_train, X_test, y_train, y_test)
         return (model, X_train, X_test, y_train, y_test)
 
 # TODO: Write a function that does 
@@ -409,3 +421,6 @@ class DataManager:
 # then it throws an exception with a nice message.
             
 #TODO: Write unit tests that assert the shape of the expected data.
+        
+#TODO: Break out some of these functions about the model specifically 
+# into a seperate class from the functions about the data.
