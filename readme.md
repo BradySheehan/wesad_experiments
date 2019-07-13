@@ -111,6 +111,7 @@ have been addressed better however all notebooks run as is.
 Performance using the LSTM based network architecture with one hidden layer
 has performed with an accuracy of ~ 97.7% on the validation set using 5 epochs.
 
+Windows:
 Learning rate = 0.05
 batch size = 2
 With just one epoch, the model has results between ~80% and ~92% for accuracy
@@ -118,6 +119,10 @@ on the validation data. Each epoch of training takes approximately 70 seconds
 without GPU acceleration. At 5 epochs, the model outperforms the WESAD quoated
 results for both accuracy and F1 using less modalities and less features.
 
+Nvidia jetson TX2:
+batch_size = 32, 4, 2
+.. performance seems pretty slow.., even when attempting to use Jetson TX2 Cuda 
+stuff. The acc is less, I'm not sure why yet.
 
 ## Future Work
 
