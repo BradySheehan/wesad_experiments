@@ -109,6 +109,12 @@ class DataManager:
             return self.extract_and_reform(data, subject)
     
     def load_all(self, subjects=SUBJECTS):
+        """ 
+        Parameters:
+        subjects (list): subject ids to be loaded
+        
+        Returns:
+        """
         for subject in subjects:
             self.load(subject)
                 
@@ -187,9 +193,11 @@ class DataManager:
         
         Parameters:
         values (numpy.ndarray): list of numeric sensor values [x, y, z]
+        window_size (int): specifies size of the sliding window
+        window_shift (int): Specifies the sliding window shift
         
         Returns: 
-        dict: 
+        dict: features for mean, max, std for given data
         """
         #print("There are ", len(values[:,1]), " samples being considered.")
         num_features = len(values[:,1]) - window_size
@@ -229,6 +237,19 @@ class DataManager:
         return features
     
     def compute_features(self, subjects=SUBJECTS, data=BASELINE_DATA, window_size=42000, window_shift=175):
+        """ 
+        Calculates features for the provided subjects given the data and
+        window size/shift of interest. 
+        
+        Parameters:
+        subjects (list): subject ids to be loaded
+        data (list): List of dictionaries containing subjects as indices
+                     and dictionaries with features for each 'ACC', 'EDA', 'Temp'
+        window_size (int): specifies size of the sliding window
+        window_shift (int): Specifies the sliding window shift
+        Returns:
+            
+        """
         keys = list(DataManager.FEATURES.keys())
         print('Computing features..')
         for subject in subjects:
@@ -351,8 +372,6 @@ class DataManager:
         return model
 
     def configure_learning(self, model):
-        windows=0.05
-        linux=0.1
         opt = SGD(lr=0.05)
         model.compile(loss='binary_crossentropy', optimizer=opt,\
                       metrics=['accuracy'])
@@ -408,6 +427,10 @@ class DataManager:
         print("_________________________________________________________________")
 
     def create_network(self, epochs=5, batch_size=32):
+        '''
+        Builds, trains, and saves a model with the provided number of epochs
+        and batch size.
+        '''
         (X_train, X_test, y_train, y_test) = self.get_train_and_test_data()
         (X_train, X_test, y_train, y_test) = \
             self.scale_data(X_train, X_test, y_train, y_test)
