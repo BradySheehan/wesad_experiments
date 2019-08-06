@@ -64,7 +64,8 @@ The features of interest for the EDA data are:
 There are two assumed paths to run the notebooks and the python module:
 - a path to the git project
 - a path to the WESAD dataset
-Be sure that these are assigned appropriately for yoru environment
+
+Be sure that these are assigned appropriately for your environment
 
 ### Dependencies
 
@@ -120,8 +121,8 @@ results for both accuracy and F1 using less modalities and less features.
 
 *Nvidia jetson TX2*:
 *batch_size = 32, 4, 2*
-.. performance seems pretty slow.., even when attempting to use Jetson TX2 Cuda 
-stuff. The acc is less, not sure why yet. With a batch size of 4, and one epoch,
+.. performance seems pretty slow.., even when attempting to use Jetson TX2 with NVIDIA GPU support. 
+The accuracy is less and not sure why yet. With a batch size of 4, and one epoch,
 we get results of approximately 82% validation accuracy. Still not as good as 
 on windows.
 
